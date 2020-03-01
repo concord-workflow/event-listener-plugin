@@ -65,6 +65,8 @@ public class SubscriberManager implements ProcessEventListener {
             return;
         }
 
+        // copy the list of current subscribers to avoid blocking new connections when broadcasting messages
+        // for large number of subscribers a RW lock might be better
         List<Subscriber> _subscribers;
         synchronized (subscribers) {
             _subscribers = new ArrayList<>(subscribers);
