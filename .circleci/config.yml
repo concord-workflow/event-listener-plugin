@@ -1,7 +1,5 @@
 version: 2
 executorType: machine
-orbs:
-  maven: circleci/maven@1.0.0
 jobs:
   build:
     steps:
@@ -10,11 +8,11 @@ jobs:
       - restore_cache:
           key: event-listener-plugin-{{ checksum "pom.xml" }}
 
-      - run: mvn -B dependency:go-offline
+      - run: ./mvnw -B dependency:go-offline
 
       - save_cache:
           paths:
             - ~/.m2
           key: event-listener-plugin-{{ checksum "pom.xml" }}
 
-      - run: mvn -B clean install
+      - run: ./mvnw -B clean install
