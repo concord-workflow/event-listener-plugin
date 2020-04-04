@@ -1,27 +1,18 @@
-version: 2.1
+version: 2
 executorType: machine
-orbs:
-  maven: circleci/maven@1.0.0
 jobs:
   build:
-    working_directory: ~/event-listener-plugin
-    docker:
-      - image: circleci/openjdk:8-jdk-stretch
-
     steps:
       - checkout
 
       - restore_cache:
           key: event-listener-plugin-{{ checksum "pom.xml" }}
 
-      - run: mvn dependency:go-offline
+      - run: ./mvnw -B dependency:go-offline
 
       - save_cache:
           paths:
             - ~/.m2
           key: event-listener-plugin-{{ checksum "pom.xml" }}
 
-      - run: mvn -B package
-
-      - store_test_results:
-          path: target/surefire-reports
+      - run: ./mvnw -B clean install
