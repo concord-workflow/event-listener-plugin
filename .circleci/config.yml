@@ -13,8 +13,8 @@ jobs:
       - run: mvn -B dependency:go-offline
 
       - save_cache:
-        paths:
-          - ~/.m2
-        key: event-listener-plugin-{{ checksum "pom.xml" }}
+          paths:
+            - ~/.m2
+          key: event-listener-plugin-{{ checksum "pom.xml" }}
 
       - run: mvn -B clean install
