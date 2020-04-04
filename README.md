@@ -24,8 +24,10 @@ If everything is okay you should see something like this in the Server's log:
 
 Connect to the endpoint using any WebSocket client (e.g. https://github.com/vi/websocat):
 ```
-$ websocat ws://localhost:8001/events
+$ websocat ws://localhost:8001/events/${processId}
 ```
+
+Replace `${processId}` with the ID of a process which events you wish to receive.
 
 You can run it several times in different terminal windows to simulate multiple
 subscribers.
