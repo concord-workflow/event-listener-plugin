@@ -1,4 +1,5 @@
 version: 2
+executorType: machine
 jobs:
   build:
     working_directory: ~/event-listener-plugin
@@ -18,7 +19,7 @@ jobs:
             - ~/.m2
           key: event-listener-plugin-{{ checksum "pom.xml" }}
 
-      - run: mvn package
+      - run: mvn -B package
 
       - store_test_results:
           path: target/surefire-reports
