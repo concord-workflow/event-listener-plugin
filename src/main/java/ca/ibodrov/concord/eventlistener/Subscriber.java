@@ -22,15 +22,23 @@ package ca.ibodrov.concord.eventlistener;
 
 import org.eclipse.jetty.websocket.api.Session;
 
+import java.util.UUID;
+
 public class Subscriber {
 
-    private Session session;
+    private final Session session;
+    private final UUID instanceId;
 
-    public Subscriber(Session session) {
+    public Subscriber(Session session, UUID instanceId) {
         this.session = session;
+        this.instanceId = instanceId;
     }
 
     public Session getSession() {
         return session;
+    }
+
+    public UUID getInstanceId() {
+        return instanceId;
     }
 }

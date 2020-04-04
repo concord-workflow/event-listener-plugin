@@ -21,6 +21,7 @@ package ca.ibodrov.concord.eventlistener;
  */
 
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.UpgradeRequest;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
@@ -30,9 +31,11 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.annotation.WebServlet;
+import java.net.URI;
+import java.util.UUID;
 
 @Named
-@WebServlet("/events")
+@WebServlet("/events/*")
 public class ProcessEventsWebSocket extends WebSocketServlet {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessEventsWebSocket.class);
@@ -81,7 +84,13 @@ public class ProcessEventsWebSocket extends WebSocketServlet {
 
         @Override
         public void onWebSocketConnect(Session session) {
-            this.subscriber = new Subscriber(session);
+            UpgradeRequest req = session.getUpgradeRequest();
+            UUID instanceId = extractInstanceId(req.getRequestURI());
+            if (instanceId == null) {
+                session.close(400, "Invalid request, can't determine the process ID");
+            }
+
+            this.subscriber = new Subscriber(session, instanceId);
             subscriberManager.subscribe(subscriber);
         }
 
@@ -89,5 +98,14 @@ public class ProcessEventsWebSocket extends WebSocketServlet {
         public void onWebSocketError(Throwable cause) {
             // ignore
         }
+    }
+
+    private static UUID extractInstanceId(URI uri) {
+        String s = uri.getPath();
+        int i = s.lastIndexOf('/');
+        if (i < 0 || i + 1 >= s.length()) {
+            return null;
+        }
+        return UUID.fromString(s.substring(i + 1));
     }
 }

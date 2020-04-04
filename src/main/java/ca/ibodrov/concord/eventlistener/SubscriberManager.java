@@ -33,6 +33,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -47,6 +48,8 @@ public class SubscriberManager implements ProcessEventListener {
         synchronized (subscribers) {
             subscribers.add(s);
         }
+
+        // TODO send all events happened before the connection was established?
     }
 
     public void unsubscribe(Subscriber s) {
@@ -57,32 +60,37 @@ public class SubscriberManager implements ProcessEventListener {
 
     @Override
     public void onEvents(List<ProcessEvent> events) {
-        String msg;
-        try {
-            msg = objectMapper.writeValueAsString(events);
-        } catch (IOException e) {
-            log.warn("Serialization error: {}", e.getMessage(), e);
-            return;
-        }
-
-        // copy the list of current subscribers to avoid blocking new connections when broadcasting messages
-        // for large number of subscribers a RW lock might be better
-        List<Subscriber> _subscribers;
+        // for large number of subscribers or messages a RW lock, a COW list or
+        // another concurrent collection might be better
         synchronized (subscribers) {
-            _subscribers = new ArrayList<>(subscribers);
-        }
+            for (Subscriber s : subscribers) {
+                List<ProcessEvent> l = events.stream()
+                        .filter(e -> e.getProcessKey().getInstanceId().equals(s.getInstanceId()))
+                        .collect(Collectors.toList());
 
-        for (Subscriber s : _subscribers) {
-            Session session = s.getSession();
-            if (session == null) {
-                continue;
-            }
+                if (l.isEmpty()) {
+                    continue;
+                }
 
-            RemoteEndpoint remote = session.getRemote();
-            try {
-                remote.sendString(msg);
-            } catch (IOException e) {
-                log.warn("Error while sending a message: {}", e.getMessage(), e);
+                String msg;
+                try {
+                    msg = objectMapper.writeValueAsString(l);
+                } catch (IOException e) {
+                    log.warn("Serialization error: {}", e.getMessage(), e);
+                    return;
+                }
+
+                Session session = s.getSession();
+                if (session == null) {
+                    continue;
+                }
+
+                RemoteEndpoint remote = session.getRemote();
+                try {
+                    remote.sendString(msg);
+                } catch (IOException e) {
+                    log.warn("Error while sending a message: {}", e.getMessage(), e);
+                }
             }
         }
     }
