@@ -1,5 +1,7 @@
-version: 2
+version: 2.1
 executorType: machine
+orbs:
+  maven: circleci/maven@1.0.0
 jobs:
   build:
     working_directory: ~/event-listener-plugin
