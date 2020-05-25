@@ -9,9 +9,9 @@ package ca.ibodrov.concord.eventlistener;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,7 @@ package ca.ibodrov.concord.eventlistener;
  * =====
  */
 
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.UpgradeRequest;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.slf4j.Logger;
@@ -31,7 +29,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.annotation.WebServlet;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 @Named
@@ -53,7 +53,7 @@ public class ProcessEventsWebSocket extends WebSocketServlet {
         log.info("The /events socket is configured");
     }
 
-    public static class Listener implements WebSocketListener {
+    public static class Listener implements WebSocketListener, WebSocketPingPongListener {
 
         private final SubscriberManager subscriberManager;
 
@@ -97,6 +97,25 @@ public class ProcessEventsWebSocket extends WebSocketServlet {
         @Override
         public void onWebSocketError(Throwable cause) {
             // ignore
+        }
+
+        @Override
+        public void onWebSocketPing(ByteBuffer payload) {
+            if (subscriber == null) {
+                return;
+            }
+
+            RemoteEndpoint endpoint = subscriber.getSession().getRemote();
+            try {
+                endpoint.sendPong(ByteBuffer.wrap("pong".getBytes()));
+            } catch (IOException e) {
+                log.warn("onWebSocketPing -> error while sending a pong message: {}", e.getMessage());
+            }
+        }
+
+        @Override
+        public void onWebSocketPong(ByteBuffer payload) {
+            // nothing to do
         }
     }
 

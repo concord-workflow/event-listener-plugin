@@ -31,14 +31,13 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class PluginTest {
 
     @Rule
     public Concord concord = new Concord()
-            .localMode(true);
+            .mode(Concord.Mode.LOCAL);
 
     private TestWebsocketClient websocketClient;
 
@@ -66,8 +65,8 @@ public class PluginTest {
         String uri = String.format("ws://localhost:%d/events/%s", concord.apiPort(), proc.instanceId());
         TestWebsocket socket = websocketClient.connect(uri);
 
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
+        proc.assertLog(".*Hello!.*");
 
         List<String> inbox = socket.flushInbox();
         assertPattern(inbox, ".*\"status\":\"FINISHED\".*");

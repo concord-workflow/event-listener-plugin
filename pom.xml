@@ -17,8 +17,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <concord.version>1.46.0</concord.version>
-        <testcontainers.concord.version>0.0.2</testcontainers.concord.version>
+        <concord.version>1.50.1</concord.version>
+        <testcontainers.concord.version>0.0.17</testcontainers.concord.version>
     </properties>
 
     <dependencyManagement>
